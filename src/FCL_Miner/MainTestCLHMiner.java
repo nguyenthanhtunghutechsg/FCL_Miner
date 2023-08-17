@@ -21,11 +21,11 @@ public class MainTestCLHMiner {
 		String outputPath = "output.txt";
 		
 		// minimum utility
-		double minimumUtility = 10000;
+		double minimumUtility = 10;
 		
 		// run the algorithm
 		AlgoCLHMiner cl = new AlgoCLHMiner();
-		cl.runAlgorithm(minimumUtility, inputPath, outputPath, TaxonomyPath,true);
+		cl.runAlgorithm(minimumUtility, inputPath, outputPath, TaxonomyPath, false);
 		cl.printStats();
 	}
 }

@@ -293,12 +293,12 @@ public class AlgoCLHMiner {
 			candidate++;
 			if (X.sumIutils > minUtil) {
 				countHUI++;
-				for (int j = 0; j < prefixLength; j++) {
-					System.out.print(prefix[j] + " ");
-				}
-				System.out.print(X.item + " ");
-
-				System.out.println("  #UTIL: " + X.sumIutils);
+//				for (int j = 0; j < prefixLength; j++) {
+//					System.out.print(prefix[j] + " ");
+//				}
+//				System.out.print(X.item + " ");
+//
+//				System.out.println("  #UTIL: " + X.sumIutils);
 
 			}
 			List<UtilityList> exULs = new ArrayList<UtilityList>();
@@ -328,8 +328,14 @@ public class AlgoCLHMiner {
 					int Child = taxonomyNode.getData();
 					UtilityList ULofChild = mapItemToUtilityList.get(Child);
 					if (ULofChild != null) {
-						UtilityList exULBuild = constructTax(pUL, ULofChild, prefix);
-						X.AddChild(exULBuild);
+						if (!isNew) {
+							UtilityList exULBuild = constructTax_old(pUL, ULofChild, prefix);
+							X.AddChild(exULBuild);
+						} else {
+							UtilityList exULBuild = constructTax_new(pUL, ULofChild, prefix);
+							X.AddChild(exULBuild);
+						}
+
 					}
 				}
 
@@ -347,7 +353,7 @@ public class AlgoCLHMiner {
 
 	}
 
-	private UtilityList constructTax(UtilityList P, UtilityList Child, int[] prefix) {
+	private UtilityList constructTax_old(UtilityList P, UtilityList Child, int[] prefix) {
 
 		if (P == null) {
 			return Child;
@@ -380,6 +386,53 @@ public class AlgoCLHMiner {
 			// return the utility list of pXY.
 			return newULs;
 		}
+	}
+
+	private UtilityList constructTax_new(UtilityList P, UtilityList Child, int[] prefix) {
+
+		if (P == null) {
+			return Child;
+		} else {
+			int indexP = 0;
+			int indexChild = 0;
+			int PMax = P.elements.size();
+			int ChildMax = Child.elements.size();
+			UtilityList newULs = new UtilityList(Child.item);
+			while (indexP < PMax && indexChild < ChildMax) {
+				Element eP = P.elements.get(indexP);
+				Element eChild = Child.elements.get(indexChild);
+				if (eP.tid == eChild.tid) {
+					List<Pair> trans = datasetAfterRemove.get(eP.tid);
+					double remainUtility = eP.TU;
+
+					for (int i = 0; i < trans.size(); i++) {
+						Integer currentItem = trans.get(i).item;
+						if (compareItems(currentItem, Child.item) < 0
+								&& compareItems(currentItem, prefix[prefix.length - 1]) > 0
+								&& (!CheckParent(Child.item, currentItem))
+								&& (!CheckParentWithPrefix(currentItem, prefix))) {
+							remainUtility -= trans.get(i).utility;
+						}
+					}
+					remainUtility -= (eP.iutils + eChild.iutils);
+					// Create new element
+					Element newElment = new Element(eP.tid, eP.iutils + eChild.iutils, remainUtility,
+							eP.TU);
+					// add the new element to the utility list of pXY
+					newULs.addElement(newElment);
+					indexP++;
+					indexChild++;
+				} else {
+					if (eP.tid > eChild.tid) {
+						indexChild++;
+					} else {
+						indexP++;
+					}
+				}
+			}
+			return newULs;
+		}
+
 	}
 
 	private UtilityList construct_new(UtilityList P, UtilityList px, UtilityList py, int[] prefix, double minU) {
